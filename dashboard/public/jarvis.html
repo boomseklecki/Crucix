@@ -1490,6 +1490,24 @@ function renderLower(){
         <div class="spark">${sparkHtml}</div>
       </div>
     </div>`;
+  const pred = D.prediction || {};
+  const predMarkets = [
+    ...(pred.polymarket || []).slice(0, 4),
+    ...(pred.kalshi || []).slice(0, 4),
+  ].sort((a, b) => b.volume24h - a.volume24h).slice(0, 8);
+  const predRows = predMarkets.map(m => {
+    const pct = m.yesPct ?? 50;
+    const pctCol = pct >= 70 ? 'var(--ok)' : pct <= 30 ? 'var(--danger)' : 'var(--text)';
+    const vol = m.volume24h >= 1e6 ? `$${(m.volume24h/1e6).toFixed(1)}M` : m.volume24h >= 1000 ? `$${(m.volume24h/1000).toFixed(1)}k` : `$${Math.round(m.volume24h)}`;
+    const inner = `<span style="font-family:var(--mono);font-size:9px;color:var(--accent);background:rgba(100,240,200,0.08);padding:1px 4px;border-radius:2px;margin-right:6px;flex-shrink:0">${m.source}</span><span style="flex:1;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)">${(m.title||'').substring(0,55)}</span><span style="font-family:var(--mono);font-size:11px;font-weight:600;color:${pctCol};margin-left:8px;flex-shrink:0">${pct}%</span><span style="font-family:var(--mono);font-size:9px;color:var(--dim);margin-left:6px;flex-shrink:0">${vol}</span>`;
+    return m.url
+      ? `<a href="${m.url}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);text-decoration:none;cursor:pointer;transition:background 0.15s" onmouseover="this.style.background='rgba(100,240,200,0.04)'" onmouseout="this.style.background=''">${inner}<span style="font-size:9px;color:var(--dim);margin-left:4px">↗</span></a>`
+      : `<div style="display:flex;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04)">${inner}</div>`;
+  }).join('');
+  const predPanel = `<div class="g-panel lp-pred">
+      <div class="sec-head"><h3>Prediction Markets</h3><span class="badge">${pred.timestamp?'LIVE':'NO DATA'}</span></div>
+      ${predMarkets.length ? `<div style="font-family:var(--mono);font-size:9px;color:var(--dim);margin-bottom:6px;letter-spacing:1px">TOP BY 24H VOLUME — PM=POLYMARKET · KX=KALSHI</div>${predRows}` : '<div style="color:var(--dim);font-size:11px;padding:8px 0">No data yet — waiting for first sweep</div>'}
+    </div>`;
   const ideasPanel = `<div class="g-panel lp-ideas">
       <div class="sec-head"><h3>${t('panels.tradeIdeas','Leverageable Ideas')}</h3>${D.ideasSource==='llm'?'<span class="ideas-src llm">'+t('ideas.aiEnhanced','AI ENHANCED')+'</span>':D.ideasSource==='disabled'?'<span class="ideas-src static">'+t('ideas.llmOff','LLM OFF')+'</span>':'<span class="ideas-src static">'+t('ideas.pending','PENDING')+'</span>'}</div>
       ${ideasHtml}
@@ -1505,7 +1523,7 @@ function renderLower(){
       <div class="delta-list">${deltaHtml}</div>
     </div>`;
 
-  document.getElementById('lowerGrid').innerHTML=`${tickerPanel}${osintPanel}${macroPanel}${ideasPanel}${deltaPanel}`;
+  document.getElementById('lowerGrid').innerHTML=`${tickerPanel}${osintPanel}${macroPanel}${predPanel}${ideasPanel}${deltaPanel}`;
 }
 
 // === RIGHT RAIL ===

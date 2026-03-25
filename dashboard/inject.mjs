@@ -427,10 +427,10 @@ export async function synthesize(data) {
   }));
   const tgData = data.sources.Telegram || {};
   const tgUrgent = (tgData.urgentPosts || []).filter(p => isEnglish(p.text)).map(p => ({
-    channel: p.channel, text: p.text?.substring(0, 200), views: p.views, date: p.date, urgentFlags: p.urgentFlags || []
+    channel: p.channel, postId: p.postId, text: p.text?.substring(0, 200), views: p.views, date: p.date, urgentFlags: p.urgentFlags || []
   }));
   const tgTop = (tgData.topPosts || []).filter(p => isEnglish(p.text)).map(p => ({
-    channel: p.channel, text: p.text?.substring(0, 200), views: p.views, date: p.date, urgentFlags: []
+    channel: p.channel, postId: p.postId, text: p.text?.substring(0, 200), views: p.views, date: p.date, urgentFlags: []
   }));
   const who = (data.sources.WHO?.diseaseOutbreakNews || []).slice(0, 10).map(w => ({
     title: w.title?.substring(0, 120), date: w.date, summary: w.summary?.substring(0, 150)
@@ -580,6 +580,15 @@ export async function synthesize(data) {
   if (yfNatgas?.price) energy.natgas = yfNatgas.price;
   if (yfWti?.history?.length) energy.wtiRecent = yfWti.history.map(h => h.close);
 
+  // Prediction market probabilities (Polymarket + Kalshi)
+  const predData = data.sources.Prediction || {};
+  const prediction = {
+    polymarket: (predData.polymarket || []).slice(0, 10),
+    kalshi: (predData.kalshi || []).slice(0, 10),
+    signals: predData.signals || [],
+    timestamp: predData.timestamp || null,
+  };
+
   // Fetch RSS
   const news = await fetchAllNews();
 
@@ -597,6 +606,7 @@ export async function synthesize(data) {
     tg: { posts: tgData.totalPosts || 0, urgent: tgUrgent, topPosts: tgTop },
     who, fred, energy, bls, treasury, gscpi, defense, noaa, epa, acled, gdelt, space, health, news,
     markets, // Live Yahoo Finance market data
+    prediction, // Polymarket + Kalshi prediction market probabilities
     ideas: [], ideasSource: 'disabled',
     // newsFeed for ticker (merged RSS + GDELT + Telegram)
     newsFeed: buildNewsFeed(news, gdeltData, tgUrgent, tgTop),
@@ -633,7 +643,8 @@ function buildNewsFeed(rssNews, gdeltData, tgUrgent, tgTop) {
     const text = (p.text || '').replace(/[\u{1F1E0}-\u{1F1FF}]/gu, '').trim();
     feed.push({
       headline: text.substring(0, 100), source: p.channel?.toUpperCase() || 'TELEGRAM',
-      type: 'telegram', timestamp: p.date, region: 'OSINT', urgent: true
+      type: 'telegram', timestamp: p.date, region: 'OSINT', urgent: true,
+      url: p.postId ? `https://t.me/s/${p.postId}` : undefined
     });
   }
 
@@ -642,7 +653,8 @@ function buildNewsFeed(rssNews, gdeltData, tgUrgent, tgTop) {
     const text = (p.text || '').replace(/[\u{1F1E0}-\u{1F1FF}]/gu, '').trim();
     feed.push({
       headline: text.substring(0, 100), source: p.channel?.toUpperCase() || 'TELEGRAM',
-      type: 'telegram', timestamp: p.date, region: 'OSINT', urgent: false
+      type: 'telegram', timestamp: p.date, region: 'OSINT', urgent: false,
+      url: p.postId ? `https://t.me/s/${p.postId}` : undefined
     });
   }
 
