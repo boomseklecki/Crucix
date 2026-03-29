@@ -25,7 +25,7 @@ async function fetchPolymarket() {
         yesPct,
         volume24h: parseFloat(m.volume24hr || m.volumeNum || 0),
         endDate: m.endDate || null,
-        url: m.slug ? `https://polymarket.com/event/${m.slug}` : null,
+        url: m.slug ? `https://polymarket.com/market/${m.slug}` : null,
         source: 'PM',
       };
     })
@@ -47,9 +47,7 @@ async function fetchKalshi() {
         yesPct,
         volume24h: (m.volume_24h_fp || 0) / 100,
         endDate: m.close_time || null,
-        url: m.event_ticker && m.ticker
-          ? `https://kalshi.com/markets/${m.event_ticker}/${m.ticker}`
-          : null,
+        url: m.ticker ? `https://kalshi.com/markets/${m.ticker}` : null,
         source: 'KX',
       };
     })

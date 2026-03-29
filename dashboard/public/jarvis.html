@@ -1614,9 +1614,9 @@ function buildOsintPanel(panelClass='', maxHeight=260){
 function buildPredPanel(){
   const pred = D.prediction || {};
   const markets = [
-    ...(pred.polymarket || []),
-    ...(pred.kalshi || []),
-  ].sort((a, b) => b.volume24h - a.volume24h).slice(0, 20);
+    ...(pred.polymarket || []).slice(0, 10),
+    ...(pred.kalshi || []).slice(0, 10),
+  ];
   const rows = markets.map(m => {
     const pct = m.yesPct ?? 50;
     const pctCol = pct >= 70 ? 'var(--ok)' : pct <= 30 ? 'var(--danger)' : 'var(--text)';
